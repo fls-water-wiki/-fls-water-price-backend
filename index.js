@@ -1,0 +1,69 @@
+require("dotenv").config();
+const express = require("express");
+const db = require("./database");
+const cors = require("cors");
+
+const app = express();
+
+app.listen(5000);
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/api/v1/data', (req, res) => {
+    res.send('sent back all data');
+})
+
+app.post('/api/v1/suggestion', async (req, res) => {
+
+})
+
+app.post('/api/v1/query', async (req, res) => {
+    console.log("POST query")
+    try {
+
+        // creates query using the keys
+        // todo refactor into utility function?
+        query = "SELECT * FROM value_price where";
+
+        const keys = Object.keys(req.body);
+        const values = [];
+
+
+        const nonEmptyKeys = keys.filter((key) => req.body[key])
+        for (let i = 0; i < nonEmptyKeys.length; i ++) {
+
+                values.push(req.body[nonEmptyKeys[i]])
+                // todo check if keys are valid to prevent SQL injection
+                // gotta be a better way to do this?
+                if (nonEmptyKeys[i] === "min_price") {
+                    query = query.concat(" " , "vp_num", ` >= $${i + 1}`);
+                } else if (nonEmptyKeys[i] === "max_price") {
+                    query = query.concat(" " , "vp_num", ` <= $${i + 1}`);
+                } else {
+                    query = query.concat(" " ,nonEmptyKeys[i], ` = $${i + 1}`);
+                }
+    
+                if (i < nonEmptyKeys.length - 1) {
+                    query = query.concat(" AND");
+                } else {
+                    query = query.concat(";")
+                
+            }
+        }
+
+        console.log(query, values);
+
+        const results = await db.query(
+            query,
+            values
+        )
+        res.status(201).json({
+            status: "success",
+            data: {
+                rows: results.rows
+            }
+        })
+    } catch (err) {
+        console.log(err);
+    }})

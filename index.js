@@ -19,7 +19,6 @@ app.post('/api/v1/suggestion', async (req, res) => {
 })
 
 app.post('/api/v1/query', async (req, res) => {
-    console.log("POST query")
     try {
 
         // creates query using the keys
@@ -51,8 +50,6 @@ app.post('/api/v1/query', async (req, res) => {
                 
             }
         }
-
-        console.log(query, values);
 
         const results = await db.query(
             query,

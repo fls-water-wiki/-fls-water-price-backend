@@ -23,7 +23,7 @@ app.post('/api/v1/query', async (req, res) => {
 
         // creates query using the keys
         // todo refactor into utility function?
-        query = "SELECT * FROM value_price where";
+        query = "SELECT * FROM value_price INNER JOIN source ON source.src_uri=value_price.source_uri WHERE";
 
         const keys = Object.keys(req.body);
         const values = [];
@@ -36,11 +36,11 @@ app.post('/api/v1/query', async (req, res) => {
                 // todo check if keys are valid to prevent SQL injection
                 // gotta be a better way to do this?
                 if (nonEmptyKeys[i] === "min_price") {
-                    query = query.concat(" " , "vp_num", ` >= $${i + 1}`);
+                    query = query.concat(" value_price." , "vp_num", ` >= $${i + 1}`);
                 } else if (nonEmptyKeys[i] === "max_price") {
-                    query = query.concat(" " , "vp_num", ` <= $${i + 1}`);
+                    query = query.concat(" value_price." , "vp_num", ` <= $${i + 1}`);
                 } else {
-                    query = query.concat(" " ,nonEmptyKeys[i], ` = $${i + 1}`);
+                    query = query.concat(" value_price." ,nonEmptyKeys[i], ` = $${i + 1}`);
                 }
     
                 if (i < nonEmptyKeys.length - 1) {
@@ -55,6 +55,11 @@ app.post('/api/v1/query', async (req, res) => {
             query,
             values
         )
+
+        const rows = results.rows;
+
+        
+
         res.status(201).json({
             status: "success",
             data: {

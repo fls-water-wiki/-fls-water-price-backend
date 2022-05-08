@@ -2,6 +2,8 @@ require("dotenv").config();
 const express = require("express");
 const db = require("./database");
 const cors = require("cors");
+const path = require("path");
+
 
 const app = express();
 
@@ -11,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/api/v1/data', (req, res) => {
-    res.send('sent back all data');
+    res.sendFile(path.join(__dirname, "water-price.pgsql"));
 })
 
 app.post('/api/v1/suggestion', async (req, res) => {
@@ -54,11 +56,7 @@ app.post('/api/v1/query', async (req, res) => {
         const results = await db.query(
             query,
             values
-        )
-
-        const rows = results.rows;
-
-        
+        )       
 
         res.status(201).json({
             status: "success",

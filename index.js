@@ -3,6 +3,7 @@ const express = require("express");
 const db = require("./database");
 const cors = require("cors");
 const path = require("path");
+const { rows } = require("pg/lib/defaults");
 
 
 const app = express();
@@ -25,7 +26,7 @@ app.post('/api/v1/query', async (req, res) => {
 
         // creates query using the keys
         // todo refactor into utility function?
-        query = "SELECT * FROM value_price INNER JOIN source ON source.src_uri=value_price.source_uri WHERE";
+        query = "SELECT value_price.*, source.src_uri, source.src_title FROM value_price INNER JOIN source ON source.src_uri=value_price.source_uri WHERE";
 
         const keys = Object.keys(req.body);
         const values = [];
@@ -57,7 +58,7 @@ app.post('/api/v1/query', async (req, res) => {
             query,
             values
         )       
-
+        
         res.status(201).json({
             status: "success",
             data: {

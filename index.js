@@ -10,6 +10,8 @@ const app = express();
 
 app.listen(3001);
 
+console.log("Server running on port 3001");
+
 app.use(cors());
 app.use(express.json());
 
@@ -20,7 +22,7 @@ app.get('/api/v1/data', (req, res) => {
 
 // handles adding new data
 app.post('/api/v1/submit', async (req, res) => {
-    console.log('hello');
+    console.log('submit start');
 
 
     const sourceText = "INSERT INTO source (source_uri, source_title, source_date, source_note, source_belief, source_creator) VALUES($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING;";
@@ -35,13 +37,13 @@ app.post('/api/v1/submit', async (req, res) => {
         console.log('done source');
         await db.query(valuePriceText, valuePriceValues);
         
-        console.log('success')
+        console.log('submit success');
         res.status(201).json({
             status: "success"
         });
 
     } catch (err) {
-        console.log(err);
+        console.error(err);
         res.status(500);
     }
 
@@ -49,6 +51,8 @@ app.post('/api/v1/submit', async (req, res) => {
 
 // handles search queries
 app.post('/api/v1/query', async (req, res) => {
+    console.log('query start');
+
     try {
         // the  query and values are separate, where the nth item in the values array
         // corresponds to the nth item in the query
@@ -81,6 +85,9 @@ app.post('/api/v1/query', async (req, res) => {
         };
 
         const results = await db.query(query, values);
+
+        console.log('query success');
+
         res.status(201).json({
             status: "success",
             data: {
@@ -90,5 +97,5 @@ app.post('/api/v1/query', async (req, res) => {
 
 
     } catch (err) {
-        console.log(err);
+        console.error(err);
     }})

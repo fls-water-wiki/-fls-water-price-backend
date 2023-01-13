@@ -5,6 +5,7 @@ const cors = require("cors");
 const path = require("path");
 const { rows } = require("pg/lib/defaults");
 
+const VALID_QUERY_KEYS = ['nat_code', 'region_code', 'earliest_year', 'latest_year', 'sector_code', 'water_treatment'];
 
 const app = express();
 
@@ -66,22 +67,32 @@ app.post('/api/v1/query', async (req, res) => {
         const nonEmptyKeys = keys.filter((key) => req.body[key]);
         for (let i = 0; i < nonEmptyKeys.length; i ++) {
 
-                values.push(req.body[nonEmptyKeys[i]])
-                // TODO check if keys are valid to prevent SQL injection
-                // gotta be a better way to do this
-                if (nonEmptyKeys[i] === "earliest_year") {
-                    query = query.concat(" value_price." , "vp_date", ` >= $${i + 1}`);
-                } else if (nonEmptyKeys[i] === "latest_year") {
-                    query = query.concat(" value_price." , "vp_date", ` <= $${i + 1}`);
+            let key = nonEmptyKeys[i];
+
+            // gotta be a better way to do this
+            if (VALID_QUERY_KEYS.includes(key)) {
+                if (key === "water_treatment") {
+                    values.push(`%${req.body[key]}%`);
+                    query = query.concat(" value_price.", "vp_wtrtrt", ` ILIKE $${i + 1}`);
                 } else {
-                    query = query.concat(" value_price." ,nonEmptyKeys[i], ` = $${i + 1}`);
-                };
+                    values.push(req.body[key]);
+                    if (key === "earliest_year") {
+                        query = query.concat(" value_price." , "vp_date", ` >= $${i + 1}`);
+                    } else if (key === "latest_year") {
+                        query = query.concat(" value_price." , "vp_date", ` <= $${i + 1}`);
+                    } else if(key === "water_treatment") {
+                    } 
+                    else {
+                        query = query.concat(" value_price." ,key, ` = $${i + 1}`);
+                    };
+                }
     
                 if (i < nonEmptyKeys.length - 1) {
                     query = query.concat(" AND");
                 } else {
                     query = query.concat(";");
                 };
+            };
         };
 
         const results = await db.query(query, values);
@@ -95,7 +106,7 @@ app.post('/api/v1/query', async (req, res) => {
             }
         });
 
-
     } catch (err) {
         console.error(err);
-    }})
+    }
+});

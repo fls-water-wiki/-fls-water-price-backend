@@ -24,15 +24,16 @@ app.get('/api/v1/data', (req, res) => {
 app.post('/api/v1/submit', async (req, res) => {
     console.log('submit start');
 
-
+    // value || null is used to transform undefined or empty string values to null
+    // otherwise, postgres will try to use them as a foreign key for user_sector and region which will cause the query to fail
+    // it will also try to cast '' to an integer for dates which will fail too
     const sourceText = 'INSERT INTO source (source_uri, source_title, source_date, source_note, source_belief, source_creator) VALUES($1, $2, $3, $4, $5, $6) ON CONFLICT DO NOTHING;';
-    const sourceValues = [req.body.source_uri, req.body.source_title, req.body.source_date, req.body.source_note, req.body.source_belief, req.body.source_creator];
+    const sourceValues = [req.body.source_uri, req.body.source_title, req.body.source_date || null, req.body.source_note, req.body.source_belief, req.body.source_creator];
 
     const valuePriceText = 'INSERT INTO value_price (vp_num, curr_code, vp_date, vp_wtrunit, type_id, sector_code, source_uri, region_code, nat_code) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)';
     
-    // value || null is used to transform undefined values to null
-    // otherwise, postgres will try to use undefined as a foreign key for user_sector and region which will cause the query to fail
-    const valuePriceValues = [req.body.price, req.body.currency, req.body.date || null, req.body.water_unit, req.body.price_type, req.body.user_sector || null, req.body.source_uri, req.body.region || null, req.body.country];
+
+    const valuePriceValues = [req.body.price, req.body.currency, req.body.date, req.body.water_unit, req.body.price_type, req.body.user_sector || null, req.body.source_uri, req.body.region || null, req.body.country];
 
     console.log('finished queries');
     try {
